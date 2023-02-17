@@ -94,7 +94,6 @@ private:
     };
 
     map<string, set<int>> word_to_documents_;
-    int document_count_ = 0;
     set<string> stop_words_;
 
     bool IsStopWord(const string& word) const {
@@ -141,17 +140,19 @@ private:
         vector<Document> matched_documents;
         map <int, int> document_to_relevance;
         for (const auto& plus : query.plus_words) {
-            for (int i = 0; i < document_count_; i++) {
-                if (word_to_documents_.at(plus).count(i)) {
-                    document_to_relevance[i]++;
-                }
+            if (word_to_documents_.count(plus) == 0) {
+                continue;
+            }
+            for (const auto document_id : word_to_documents_.at(plus)) {
+                document_to_relevance[document_id]++;
             }
         }
         for (const auto& minus : query.minus_words) {
-            for (int i = 0; i < document_count_; i++) {
-                if (word_to_documents_.at(minus).count(i) != 0) {
-                    document_to_relevance.erase(i);
-                }
+            if (word_to_documents_.count(minus) == 0) {
+                continue;
+            }
+            for (const auto document_id : word_to_documents_.at(minus)) {
+                document_to_relevance.erase(document_id);
             }
         }
         for (const auto& [document_id, relevance] : document_to_relevance) {
@@ -159,37 +160,6 @@ private:
         }
         return matched_documents;
     }
-
-    //static int DocWithMinus(const map<string, set<int>>& content, const Query& query) {
-    //    if (query.minus_words.empty()) {
-    //        return 0;
-    //    }
-    //    set<string> matched_minus;
-    //    for (const string& word : content) {
-    //        if (query.minus_words.count(word) != 0) {
-    //            return static_cast<int>(matched_minus.size());
-    //        }
-    //    }
-    //}
-
-    //static int MatchDocument(const map<string, set<int>>& content, const Query& query) {
-    //    if (query.plus_words.empty()) {
-    //        return 0;
-    //    }
-    //    set<string> matched_words;
-    //    for (const string& word : content) {
-    //        if (query.minus_words.count(word) != 0) {
-    //            return 0;
-    //        }
-    //        if (matched_words.count(word) != 0) {
-    //            continue;
-    //        }
-    //        if (query.plus_words.count(word) != 0) {
-    //            matched_words.insert(word);
-    //        }
-    //    }
-    //    return static_cast<int>(matched_words.size());
-    //}
 };
 
 SearchServer CreateSearchServer() {
