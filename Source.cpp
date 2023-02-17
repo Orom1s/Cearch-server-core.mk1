@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 
+
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
@@ -153,7 +154,7 @@ private:
                 }
             }
         }
-        for (const int& [document_id, relevance] : document_to_relevance) {
+        for (const auto& [document_id, relevance] : document_to_relevance) {
             matched_documents.push_back({ document_id, relevance });
         }
         return matched_documents;
