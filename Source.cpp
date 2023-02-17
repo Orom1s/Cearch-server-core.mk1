@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <cmath>
 
 
 using namespace std;
@@ -47,7 +48,7 @@ vector<string> SplitIntoWords(const string& text) {
 
 struct Document {
     int id;
-    int relevance;
+    double relevance;
 };
 
 
@@ -61,15 +62,17 @@ public:
     }
 
     void AddDocument(int document_id, const string& document) {
-        for (auto& word : SplitIntoWordsNoStop(document)) {
-            word_to_documents_[word].insert({ document_id });
+        ++document_count;
+        const vector<string> words = SplitIntoWordsNoStop(document);
+        const double inv_word_count = 1.0 / words.size();
+        for (auto& word : words) { 
+            word_to_document_freqs_[word][document_id] += inv_word_count;
         }
     }
 
     vector<Document> FindTopDocuments(const string& raw_query) const {
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query);
-
         sort(matched_documents.begin(), matched_documents.end(),
             [](const Document& lhs, const Document& rhs) {
                 return lhs.relevance > rhs.relevance;
@@ -93,8 +96,9 @@ private:
         set<string> minus_words;
     };
 
-    map<string, set<int>> word_to_documents_;
+    map<string, map<int, double>> word_to_document_freqs_;
     set<string> stop_words_;
+    int document_count = 0;
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -136,22 +140,27 @@ private:
         return query;
     }
 
+    double ComputeWordInverseDocumentFreq(const string& word) const {
+        return log(document_count * 1.0 / word_to_document_freqs_.at(word).size());
+    }
+
     vector<Document> FindAllDocuments(const Query& query) const {
         vector<Document> matched_documents;
-        map <int, int> document_to_relevance;
+        map <int, double> document_to_relevance;
         for (const auto& plus : query.plus_words) {
-            if (word_to_documents_.count(plus) == 0) {
+            if (word_to_document_freqs_.count(plus) == 0) {
                 continue;
             }
-            for (const auto document_id : word_to_documents_.at(plus)) {
-                document_to_relevance[document_id]++;
+            const double inverse_document_freq = ComputeWordInverseDocumentFreq(plus);
+            for (const auto [document_id, term_freq] : word_to_document_freqs_.at(plus)) {
+                document_to_relevance[document_id] += term_freq* inverse_document_freq;
             }
         }
         for (const auto& minus : query.minus_words) {
-            if (word_to_documents_.count(minus) == 0) {
+            if (word_to_document_freqs_.count(minus) == 0) {
                 continue;
             }
-            for (const auto document_id : word_to_documents_.at(minus)) {
+            for (const auto [document_id, _] : word_to_document_freqs_.at(minus)) {
                 document_to_relevance.erase(document_id);
             }
         }
