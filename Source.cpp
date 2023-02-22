@@ -42,13 +42,35 @@ vector<string> SplitIntoWords(const string& text) {
     if (!word.empty()) {
         words.push_back(word);
     }
-
     return words;
 }
+
+//vector<int> SplitIntoNumbers(const string& text) {
+//    vector<int> numbers;
+//    string num;
+//    for (const char c : text) {
+//        if (c == ' ') {
+//            if (!num.empty()) {
+//                int number = stoi(num);
+//                numbers.push_back(number);
+//                num.clear();
+//            }
+//        }
+//        else {
+//            num += c;
+//        }
+//    }
+//    if (!num.empty()) {
+//        int number = stoi(num);
+//        numbers.push_back(number);
+//    }
+//    return numbers;
+//}
 
 struct Document {
     int id;
     double relevance;
+    int rating;
 };
 
 
@@ -61,13 +83,14 @@ public:
         }
     }
 
-    void AddDocument(int document_id, const string& document) {
+    void AddDocument(int document_id, const string& document, const vector<int>& ratings) {
         ++document_count;
         const vector<string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
-        for (auto& word : words) { 
+        for (auto& word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
         }
+        document_ratings_[document_id] = ComputeAverageRating(ratings);
     }
 
     vector<Document> FindTopDocuments(const string& raw_query) const {
@@ -99,9 +122,20 @@ private:
     map<string, map<int, double>> word_to_document_freqs_;
     set<string> stop_words_;
     int document_count = 0;
+    map<int, int>  document_ratings_;
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
+    }
+
+    static int ComputeAverageRating(const vector<int>& ratings) {
+        int sum = 0;
+        for (const int& x : ratings) {
+            sum += x;
+        }
+        int size_rating = ratings.size();
+        sum = sum / size_rating;
+        return static_cast<int> (sum);
     }
 
     vector<string> SplitIntoWordsNoStop(const string& text) const {
@@ -116,7 +150,6 @@ private:
 
     QueryWord ParseQueryWord(string text) const {
         bool is_minus = false;
-        // Word shouldn't be empty
         if (text[0] == '-') {
             is_minus = true;
             text = text.substr(1);
@@ -165,7 +198,7 @@ private:
             }
         }
         for (const auto& [document_id, relevance] : document_to_relevance) {
-            matched_documents.push_back({ document_id, relevance });
+            matched_documents.push_back({ document_id, relevance, document_ratings_.at(document_id)});
         }
         return matched_documents;
     }
@@ -174,21 +207,27 @@ private:
 SearchServer CreateSearchServer() {
     SearchServer search_server;
     search_server.SetStopWords(ReadLine());
-
     const int document_count = ReadLineWithNumber();
     for (int document_id = 0; document_id < document_count; ++document_id) {
-        search_server.AddDocument(document_id, ReadLine());
-    }
+        const string document = ReadLine();
+        int ratings_size;
+        cin >> ratings_size;
+        vector<int> ratings(ratings_size, 0);
+        for (int& rating : ratings) {
+            cin >> rating;
+        }
 
+        search_server.AddDocument(document_id, document, ratings);
+        ReadLine();
+    }
     return search_server;
 }
 
 int main() {
     const SearchServer search_server = CreateSearchServer();
-
     const string query = ReadLine();
-    for (const auto& [id, relevance] : search_server.FindTopDocuments(query)) {
+    for (const auto& [id, relevance, rating] : search_server.FindTopDocuments(query)) {
         cout << "{ document_id = "s << id << ", "
-            << "relevance = "s << relevance << " }"s << endl;
+            << "relevance = "s << relevance << ", " << "rating = "s << rating << " }"s << endl;
     }
 }
