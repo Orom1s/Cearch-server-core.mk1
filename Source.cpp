@@ -67,6 +67,10 @@ public:
         }
     }
 
+    int GetDocumentCount() const {
+        return documents_.size();
+    }
+
     void AddDocument(int document_id, const string& document, const DocumentStatus status, const vector<int>& ratings) {
         ++document_count;
         const vector<string> words = SplitIntoWordsNoStop(document);
@@ -85,12 +89,30 @@ public:
         auto matched_documents = FindAllDocuments(query, status);
         sort(matched_documents.begin(), matched_documents.end(),
             [](const Document& lhs, const Document& rhs) {
-                return lhs.relevance > rhs.relevance;
+                const double EPSILON = 1e-6;
+                return lhs.relevance > rhs.relevance || (abs(lhs.relevance - rhs.relevance) < EPSILON && lhs.rating > rhs.rating);
             });
         if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
             matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
         }
         return matched_documents;
+    }
+
+    tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
+        Query query = ParseQuery(raw_query);
+        vector<string> match_words;
+        for (const auto& plus : query.plus_words) {
+            if (!word_to_document_freqs_.count(plus) == 0 && word_to_document_freqs_.at(plus).count(document_id)) {
+                match_words.push_back(plus);
+            }
+        }
+        for (const auto& minus : query.minus_words) {
+            if ((!word_to_document_freqs_.count(minus) == 0 && word_to_document_freqs_.at(minus).count(document_id))) {
+                match_words.clear();
+                break;
+            }
+        }
+        return {match_words, documents_.at(document_id).status};
     }
 
 private:
@@ -124,7 +146,7 @@ private:
         for (const int& x : ratings) {
             sum += x;
         }
-        int size_rating = ratings.size();
+        int size_rating = static_cast<int>(ratings.size());
         sum = sum / size_rating;
         return static_cast<int> (sum);
     }
@@ -199,48 +221,50 @@ private:
     }
 };
 
-void PrintDocument(const Document& document) {
-    cout << "{ "s
-        << "document_id = "s << document.id << ", "s
-        << "relevance = "s << document.relevance << ", "s
-        << "rating = "s << document.rating
-        << " }"s << endl;
-}
-
-SearchServer CreateSearchServer() {
-    SearchServer search_server;
-    search_server.SetStopWords(ReadLine());
-    const int document_count = ReadLineWithNumber();
-    for (int document_id = 0; document_id < document_count; ++document_id) {
-        const string document = ReadLine();
-
-        int status_raw;
-        cin >> status_raw;
-        const DocumentStatus status = static_cast<DocumentStatus>(status_raw);
-        int ratings_size;
-        cin >> ratings_size;
-
-        vector<int> ratings(ratings_size, 0);
-        for (int& rating : ratings) {
-            cin >> rating;
-        }
-        search_server.AddDocument(document_id, document, status, ratings);
-        ReadLine();
-    }
-    return search_server;
-}
 
 
-int main() {
-    const SearchServer search_server = CreateSearchServer();
-    const string query = ReadLine();
-    const DocumentStatus status = static_cast<DocumentStatus>(ReadLineWithNumber());
-    for (const Document& document : search_server.FindTopDocuments(query, status)) {
-        PrintDocument(document);
-    }
-    return 0;
-}
+//SearchServer CreateSearchServer() {
+//    SearchServer search_server;
+//    search_server.SetStopWords(ReadLine());
+//    const int document_count = ReadLineWithNumber();
+//    for (int document_id = 0; document_id < document_count; ++document_id) {
+//        const string document = ReadLine();
+//
+//        int status_raw;
+//        cin >> status_raw;
+//        const DocumentStatus status = static_cast<DocumentStatus>(status_raw);
+//        int ratings_size;
+//        cin >> ratings_size;
+//
+//        vector<int> ratings(ratings_size, 0);
+//        for (int& rating : ratings) {
+//            cin >> rating;
+//        }
+//        search_server.AddDocument(document_id, document, status, ratings);
+//        ReadLine();
+//    }
+//    return search_server;
+//}
+//
+//
+//int main() {
+//    const SearchServer search_server = CreateSearchServer();
+//    const string query = ReadLine();
+//    const DocumentStatus status = static_cast<DocumentStatus>(ReadLineWithNumber());
+//    for (const Document& document : search_server.FindTopDocuments(query, status)) {
+//        PrintDocument(document);
+//    }
+//    return 0;
+//}
 
+//void PrintDocument(const Document& document) {
+//    cout << "{ "s
+//        << "document_id = "s << document.id << ", "s
+//        << "relevance = "s << document.relevance << ", "s
+//        << "rating = "s << document.rating
+//        << " }"s << endl;
+//}
+//
 //int main() {
 //    SearchServer search_server;
 //    search_server.SetStopWords("и в на"s);
@@ -261,3 +285,26 @@ int main() {
 //    }
 //}
 
+void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status) {
+    cout << "{ "s
+        << "document_id = "s << document_id << ", "s
+        << "status = "s << static_cast<int>(status) << ", "s
+        << "words ="s;
+    for (const string& word : words) {
+        cout << ' ' << word;
+    }
+    cout << "}"s << endl;
+}
+int main() {
+    SearchServer search_server;
+    search_server.SetStopWords("и в на"s);
+    search_server.AddDocument(0, "белый кот и модный ошейник"s, DocumentStatus::ACTUAL, { 8, -3 });
+    search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, { 7, 2, 7 });
+    search_server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, { 5, -12, 2, 1 });
+    search_server.AddDocument(3, "ухоженный скворец евгений"s, DocumentStatus::BANNED, { 9 });
+    const int document_count = search_server.GetDocumentCount();
+    for (int document_id = 0; document_id < document_count; ++document_id) {
+        const auto [words, status] = search_server.MatchDocument("пушистый кот"s, document_id);
+        PrintMatchDocumentResult(document_id, words, status);
+    }
+}
