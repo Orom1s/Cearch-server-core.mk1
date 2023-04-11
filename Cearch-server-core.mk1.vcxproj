@@ -18,6 +18,22 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Server\document.h" />
+    <ClInclude Include="Server\paginator.h" />
+    <ClInclude Include="Server\read_input_functions.h" />
+    <ClInclude Include="Server\request_queue.h" />
+    <ClInclude Include="Server\search_server.h" />
+    <ClInclude Include="Server\string_processing.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Server\document.cpp" />
+    <ClCompile Include="Server\main.cpp" />
+    <ClCompile Include="Server\read_input_functions.cpp" />
+    <ClCompile Include="Server\request_queue.cpp" />
+    <ClCompile Include="Server\search_server.cpp" />
+    <ClCompile Include="Server\string_processing.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -139,22 +155,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="document.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="read_input_functions.cpp" />
-    <ClCompile Include="request_queue.cpp" />
-    <ClCompile Include="search_server.cpp" />
-    <ClCompile Include="string_processing.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="document.h" />
-    <ClInclude Include="paginator.h" />
-    <ClInclude Include="read_input_functions.h" />
-    <ClInclude Include="request_queue.h" />
-    <ClInclude Include="search_server.h" />
-    <ClInclude Include="string_processing.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
