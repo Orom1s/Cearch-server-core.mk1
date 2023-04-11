@@ -16,6 +16,8 @@ using namespace std::string_literals;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
+bool IsValidWord(const std::string& word);
+
 class StopWords {
 public:
  
@@ -116,7 +118,7 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_quer
         auto matched_documents = FindAllDocuments(query, document_predicate);
         sort(matched_documents.begin(), matched_documents.end(),
              [](const Document& lhs, const Document& rhs) {
-                 if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+                 if (std::abs(lhs.relevance - rhs.relevance) < 1e-6) {
                      return lhs.rating > rhs.rating;
                  } else {
                      return lhs.relevance > rhs.relevance;

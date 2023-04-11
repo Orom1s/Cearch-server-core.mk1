@@ -1,6 +1,12 @@
 
 #include "search_server.h"
 
+    bool IsValidWord(const std::string& word) {
+        return none_of(word.begin(), word.end(), [](char c) {
+            return c >= '\0' && c < ' ';
+            });
+    }   
+
     bool StopWords::IsStopWord(const std::string& word) const {
         return stop_words.count(word) > 0;
     }
