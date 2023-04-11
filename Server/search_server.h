@@ -109,7 +109,6 @@ StopWords::StopWords(const Container& container) {
         }
 }
 
-
 template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
                                         DocumentPredicate document_predicate) const {
