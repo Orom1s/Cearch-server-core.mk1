@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Server\document.h" />
+    <ClInclude Include="Server\log_duration.h" />
     <ClInclude Include="Server\paginator.h" />
     <ClInclude Include="Server\read_input_functions.h" />
     <ClInclude Include="Server\request_queue.h" />
