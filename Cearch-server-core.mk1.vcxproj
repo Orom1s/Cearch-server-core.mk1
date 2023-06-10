@@ -25,6 +25,7 @@
     <ClInclude Include="Server\paginator.h" />
     <ClInclude Include="Server\process_queries.h" />
     <ClInclude Include="Server\read_input_functions.h" />
+    <ClInclude Include="Server\remove_duplicates.h" />
     <ClInclude Include="Server\request_queue.h" />
     <ClInclude Include="Server\search_server.h" />
     <ClInclude Include="Server\string_processing.h" />
@@ -45,6 +46,7 @@
     </ClCompile>
     <ClCompile Include="Server\process_queries.cpp" />
     <ClCompile Include="Server\read_input_functions.cpp" />
+    <ClCompile Include="Server\remove_duplicates.cpp" />
     <ClCompile Include="Server\request_queue.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
