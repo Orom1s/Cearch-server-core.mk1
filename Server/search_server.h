@@ -18,7 +18,9 @@
 #include "concurrent_map.h"
 using namespace std::string_literals;
 
-const int MAX_RESULT_DOCUMENT_COUNT = 5;
+constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
+constexpr double EPSILON = 1e-6;
+constexpr size_t BUCKETS = 16;
 
 class StopWords {
 public:
@@ -150,21 +152,7 @@ StopWords::StopWords(const Container& container) {
 template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
     DocumentPredicate document_predicate) const {
-    const Query query = ParseQuery(raw_query);
-    auto matched_documents = FindAllDocuments(query, document_predicate);
-    std::sort(matched_documents.begin(), matched_documents.end(),
-        [](const Document& lhs, const Document& rhs) {
-            if (std::abs(lhs.relevance - rhs.relevance) < 1e-6) {
-                return lhs.rating > rhs.rating;
-            }
-            else {
-                return lhs.relevance > rhs.relevance;
-            }
-        });
-    if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
-        matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
-    }
-    return matched_documents;
+    return SearchServer::FindTopDocuments(std::execution::seq, raw_query, document_predicate);
 }
 
 template <typename DocumentPredicate, typename ExecutionPolicy>
@@ -174,7 +162,7 @@ std::vector<Document> SearchServer::FindTopDocuments(ExecutionPolicy&& policy, s
     auto matched_documents = FindAllDocuments(policy, query, document_predicate);
     std::sort(policy, matched_documents.begin(), matched_documents.end(),
         [](const Document& lhs, const Document& rhs) {
-            if (std::abs(lhs.relevance - rhs.relevance) < 1e-6) {
+            if (std::abs(lhs.relevance - rhs.relevance) < EPSILON) {
                 return lhs.rating > rhs.rating;
             }
             else {
@@ -238,7 +226,7 @@ std::vector<Document> SearchServer::FindAllDocuments(const std::execution::seque
 
 template<typename Key_mapper>
 std::vector<Document> SearchServer::FindAllDocuments(const std::execution::parallel_policy&, const Query& query, Key_mapper status) const {
-    ConcurrentMap<int, double> document_to_relevance(16);
+    ConcurrentMap<int, double> document_to_relevance(BUCKETS);
     std::for_each(std::execution::par, query.minus_words.begin(), query.minus_words.end(), [this, &document_to_relevance](std::string_view minus) {
         if (word_to_document_freqs_.count(minus)) {
             for (const auto [document_id, _] : word_to_document_freqs_.at(minus)) {
