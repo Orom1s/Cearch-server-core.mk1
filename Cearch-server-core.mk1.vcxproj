@@ -19,19 +19,35 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Server\concurrent_map.h" />
     <ClInclude Include="Server\document.h" />
     <ClInclude Include="Server\log_duration.h" />
     <ClInclude Include="Server\paginator.h" />
+    <ClInclude Include="Server\process_queries.h" />
     <ClInclude Include="Server\read_input_functions.h" />
     <ClInclude Include="Server\request_queue.h" />
     <ClInclude Include="Server\search_server.h" />
     <ClInclude Include="Server\string_processing.h" />
+    <ClInclude Include="Server\test_example_functions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Server\document.cpp" />
-    <ClCompile Include="Server\main.cpp" />
+    <ClCompile Include="Server\main.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MultiProcessorCompilation>
+      <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdc17</LanguageStandard_C>
+      <EnableModules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableModules>
+      <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdc17</LanguageStandard_C>
+      <EnableModules Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableModules>
+      <EnforceTypeConversionRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnforceTypeConversionRules>
+      <EnforceTypeConversionRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnforceTypeConversionRules>
+    </ClCompile>
+    <ClCompile Include="Server\process_queries.cpp" />
     <ClCompile Include="Server\read_input_functions.cpp" />
-    <ClCompile Include="Server\request_queue.cpp" />
+    <ClCompile Include="Server\request_queue.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="Server\search_server.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdcpp20</LanguageStandard>
@@ -41,6 +57,7 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdc17</LanguageStandard_C>
     </ClCompile>
+    <ClCompile Include="Server\test_example_functions.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -157,6 +174,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
