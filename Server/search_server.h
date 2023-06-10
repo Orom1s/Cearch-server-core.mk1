@@ -11,6 +11,7 @@
 #include <set>
 #include <execution>
 #include <string_view>
+#include <type_traits>
 
 #include "document.h"
 #include "string_processing.h"
@@ -72,11 +73,13 @@ public:
     template <typename ExecutionPolicy>
     std::vector<Document> FindTopDocuments(ExecutionPolicy&& policy, std::string_view raw_query) const;
 
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view& raw_query, int document_id) const;
+    using match_tuple = std::tuple<std::vector<std::string_view>, DocumentStatus>;
 
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::sequenced_policy&, const std::string_view& raw_query, int document_id) const;
+    match_tuple MatchDocument(const std::string_view& raw_query, int document_id) const;
 
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::parallel_policy&, const std::string_view& raw_query, int document_id) const;
+    match_tuple MatchDocument(const std::execution::sequenced_policy&, const std::string_view& raw_query, int document_id) const;
+
+    match_tuple MatchDocument(const std::execution::parallel_policy&, const std::string_view& raw_query, int document_id) const;
 
     const std::map<std::string_view, double>& GetWordFrequencies(int document_id) const;
 
@@ -118,8 +121,7 @@ private:
 
     QueryWord  ParseQueryWord(std::string_view text) const;
 
-    Query ParseQuery(std::string_view text) const;
-    Query ParseQueryParallel(std::string_view text) const;
+    Query ParseQuery(std::string_view text, const bool& is_match_par = false) const;
 
     double ComputeWordInverseDocumentFreq(const std::string_view& word) const;
 
@@ -266,3 +268,4 @@ std::vector<Document> SearchServer::FindAllDocuments(const std::execution::paral
     }
     return matched_documents;
 }
+
